@@ -13,7 +13,7 @@ def generate(prompt, max_len=40):
     tokenizer = load_tokenizer()
     input_ids = tokenizer.encode(prompt.lower())
     model = TinyLLM(len(tokenizer.token2id))
-    model.load_state_dict(torch.load("model.pt"))
+    model.load_state_dict(torch.load("vocab.pt"))
     model.eval()
 
     x = torch.tensor(input_ids).unsqueeze(1)
@@ -24,4 +24,11 @@ def generate(prompt, max_len=40):
         x = torch.cat([x, torch.tensor([[next_id]])], dim=0)
         if next_id == 0:
             break
-    return tokenizer.decode(x.squeeze().tolist())
+    # Decode and format as a clean sentence
+    output = tokenizer.decode(x.squeeze().tolist())
+    output = output.replace(" <UNK>", "").strip()
+    # Capitalize first letter and add period if missing
+    if output and not output.endswith('.'):
+        output += '.'
+    output = output[0].upper() + output[1:] if output else output
+    return output
